@@ -73,13 +73,10 @@ export default class Game extends Phaser.Scene {
 
     this.physics.add.collider(this.personaje, this.recolectables)
 
-    this.physics.add.overlap(this.personaje, this.recolectables, this.pj, null, this)
+    this.physics.add.collider(this.personaje, this.recolectables, this.pj, null, this)
 
     this.physics.add.overlap(this.plataformas, this.recolectables, this.floor, null, this)
 
-
-
-  
 
     //evento 1 seg
 
@@ -93,7 +90,7 @@ export default class Game extends Phaser.Scene {
   }
   
   pj(personaje, recolectables){
-    recolectables.disableBody(true,true)
+    recolectables.destroy();
   }
 
   floor(plataformas, recolectables){
