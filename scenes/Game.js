@@ -12,7 +12,7 @@ export default class Game extends Phaser.Scene {
 
     //import cielo
     
-    this.load.image("cielo", "../public/assets/Cielo.webp");
+    this.load.image("cielo", "../public/assets/pizzeria.jpg");
     
     //import plataforma
     
@@ -20,13 +20,13 @@ export default class Game extends Phaser.Scene {
    
     //import personaje
    
-    this.load.image("personaje", "../public/assets/teemo.webp"); 
+    this.load.image("personaje", "../public/assets/pizza1.webp"); 
 
     //import recolectable
 
-    this.load.image("triangulo", "../public/assets/triangle.png");
-    this.load.image("diamante", "../public/assets/diamond.png");
-    this.load.image("cuadrado", "../public/assets/square.png");
+    this.load.image("triangulo", "../public/assets/rucula.png");
+    this.load.image("diamante", "../public/assets/cebolla.png");
+    this.load.image("cuadrado", "../public/assets/champis.png");
 
   }
 
@@ -60,7 +60,7 @@ export default class Game extends Phaser.Scene {
 
     this.cursor = this.input.keyboard.createCursorKeys();
 
-    //unma tecla a la vez
+    //una tecla a la vez
 
     //this.w = input.keyboard.addKey(Phaser.Input.Keyboard.Keycodes.W)
     //this.a = input.keyboard.addKey(Phaser.Input.Keyboard.Keycodes.A)
@@ -70,6 +70,7 @@ export default class Game extends Phaser.Scene {
     // crear grupo de recolectables
 
     this.recolectables = this.physics.add.group();
+
 
     this.physics.add.collider(this.personaje, this.recolectables)
 
@@ -86,6 +87,7 @@ export default class Game extends Phaser.Scene {
       callbackScope: this,
       loop: true,
     });
+
 
   }
   
@@ -104,10 +106,14 @@ export default class Game extends Phaser.Scene {
     const tipo = Phaser.Math.RND.pick(tipos);
 
     let recolectable = this.recolectables.create(
-      Phaser.Math.Between(10, 790),
+      Phaser.Math.Between(15, 785),
       0,
       tipo
     );
+
+    // Ajustar la escala del recolectable
+    recolectable.setScale(0.25);
+
     recolectable.setVelocity(0, 100);
     this.physics.add.collider(recolectable, this.recolectables)
   }
@@ -115,16 +121,16 @@ export default class Game extends Phaser.Scene {
   update() {
     //movimineot personajae
     if (this.cursor.left.isDown) {
-      this.personaje.setVelocityX(-160);
+      this.personaje.setVelocityX(-200);
     } else if (this.cursor.right.isDown) {
-      this.personaje.setVelocityX(160)
+      this.personaje.setVelocityX(200)
     } else if (this.cursor.up.isDown && this.personaje.body.touching.down) {
-      this.personaje.setVelocityY(-330)
+      this.personaje.setVelocityY(-300)
     } else {
       this.personaje.setVelocityX(0)
     }
     if (this.cursor.up.isDown && this.personaje.body.touching.down) {
-      this.personaje.setVelocityY(-330)
+      this.personaje.setVelocityY(-300)
     }
   }
 
