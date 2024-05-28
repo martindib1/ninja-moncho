@@ -12,6 +12,8 @@ export default class End extends Phaser.Scene {
     }
 
     create(){
+        
+
         this.add
         .text(400, 300, this.gameOver ? "Game Over" : "You Win", {
             fontSize: "40px",
@@ -22,5 +24,7 @@ export default class End extends Phaser.Scene {
         
         this.add.text(400, 350, `Score ${this.score}`);
     }
+      
+    
 
 }
