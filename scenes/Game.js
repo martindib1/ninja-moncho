@@ -5,26 +5,37 @@ export default class Game extends Phaser.Scene {
 
   init() {
     this.gameOver = false;
-    this.timer = 50;
+    this.timer = 25;
     this.score = 0;
     this.shapes = {
       "triangulo": { points: 10, count: 0 },
       "cuadrado": { points: 20, count: 0 },
-      "diamante": { points: 30, count: 0 }
+      "diamante": { points: 30, count: 0 },
+      "bomb": { points: -10, count: 0 }
     };
   }
 
   preload() {
     // Cargar assets
     this.load.image("cielo", "./public/pizzeria.jpg");
-    this.load.image("plataforma", "./public/platform.png");
+    this.load.image("plataforma", "./public/plataforma1.jpg");
     this.load.image("personaje", "./public/pizza1.webp");
     this.load.image("triangulo", "./public/rucula.png");
     this.load.image("diamante", "./public/cebolla.png");
     this.load.image("cuadrado", "./public/champis.png");
+    this.load.image("bomb", "./public/anana.png");
+    this.load.audio('backmusic', ['./public/italiana.mp3']);
   }
 
   create() {
+  //verificar si la musica esta sonando
+  if (!this.backgroundMusic || !this.backgroundMusic.isPlaying) {
+
+    // Agregar música de fondo
+    this.backgroundMusic = this.sound.add('backmusic', { loop: true, volume: 0.2 });
+    this.backgroundMusic.play();
+}
+
     // Crear cielo y ajustarlo
     this.cielo = this.add.image(400, 300, "cielo");
     this.cielo.setScale(2);
@@ -32,7 +43,8 @@ export default class Game extends Phaser.Scene {
     // Crear grupo de plataformas
     this.plataformas = this.physics.add.staticGroup();
     this.plataformas.create(400, 568, "plataforma").setScale(2).refreshBody();
-    this.plataformas.create(200, 400, "plataforma");
+    this.plataformas.create(50, 400, "plataforma");
+    this.plataformas.create(800, 400, "plataforma");
 
     // Crear personaje
     this.personaje = this.physics.add.sprite(400, 300, "personaje");
@@ -46,10 +58,14 @@ export default class Game extends Phaser.Scene {
     this.cursor = this.input.keyboard.createCursorKeys();
 
     // Crear grupo de recolectables
-    this.recolectables = this.physics.add.group();
-    this.physics.add.collider(this.personaje, this.recolectables, this.collectItem, null, this);
-
-    this.physics.add.collider(this.plataformas, this.recolectables, this.Bounce, null, this);
+    this.recolectables = this.physics.add.group(); 
+    this.physics.add.collider(this.recolectables, this.recolectables)
+  
+    this.physics.add.collider(this.personaje, this.recolectables, this.collectItem, null, this)
+    
+    this.physics.add.overlap(this.plataformas, this.recolectables, this.Bounce, null, this)
+  
+    //colision para el bounce
 
     this.physics.add.collider(this.plataformas, this.recolectables, this.onRecolectableBounced, null, this);
 
@@ -84,11 +100,10 @@ export default class Game extends Phaser.Scene {
 
   collectItem(personaje, recolectable) {
     const nombreFig = recolectable.texture.key;
-    const puntosFig = this.shapes[nombreFig].points;
-    this.score += puntosFig;
+    /*const puntosFig = this.shapes[nombreFig].points;*/
+    this.score += recolectable.getData("points");
     this.shapes[nombreFig].count += 1;
     recolectable.destroy();
-
     this.scoreText.setText(
       `puntaje: ${this.score} / T: ${this.shapes["triangulo"].count} / C: ${this.shapes["cuadrado"].count} / D: ${this.shapes["diamante"].count}`
     );
@@ -112,22 +127,12 @@ export default class Game extends Phaser.Scene {
     }
   }
 
-  /*bounce(plataformas, recolectable) {
-    recolectable.setVelocityY(-150);
-    const nombreFig = recolectable.texture.key;
-    recolectable.points -= 5;
-
-    if (recolectable.points <= 0) {
-      recolectable.destroy();
-    }
-  } */
-
   onSecond() {
     if (this.gameOver) {
       return;
     }
 
-    const tipos = ["triangulo", "cuadrado", "diamante"];
+    const tipos = ["triangulo", "cuadrado", "diamante","bomb"];
     const tipo = Phaser.Math.RND.pick(tipos);
 
     let recolectable = this.recolectables.create(
@@ -136,9 +141,19 @@ export default class Game extends Phaser.Scene {
       tipo
     );
 
-    recolectable.setScale(0.25);
-    recolectable.setBounce(1, 1);
-    recolectable.setCollideWorldBounds(true);
+    if(tipo=="bomb"){ //anana
+      recolectable.setScale(0.15)
+    }
+    if(tipo=="triangulo"){ //rucula
+      recolectable.setScale(0.15)
+    }
+    if(tipo=="cuadrado"){ //champi
+      recolectable.setScale(0.2)
+    }
+    if(tipo=="diamante"){ //cebolla
+      recolectable.setScale(0.25)
+    }
+    
     recolectable.setVelocity(0, 100);
 
     const nombreFig = recolectable.texture.key;
@@ -156,14 +171,15 @@ export default class Game extends Phaser.Scene {
     
   }
 
-  onRecolectableBounced(recolectable, plataforma) {
-    const points = recolectable.getData("points");
+  onRecolectableBounced(platforms, recolectable) {
+    console.log("recolectable rebote",recolectable);
+    let points = recolectable.getData("points");
     points -= 5;
-
+    console.log(points)
+    recolectable.setData("points", points);
     if (points <= 0) {
       recolectable.destroy();
     }
-    recolectable.setData("points", points)
   }
 
   updateTimer() {
@@ -200,5 +216,18 @@ export default class Game extends Phaser.Scene {
       this.physics.pause();
       this.timerText.setText("Game Over");
     }
+    // Reiniciar la música al presionar la tecla "R"
+    if (Phaser.Input.Keyboard.JustDown(this.r)) {
+    // Detener la música actual
+    if (this.backgroundMusic) {
+      this.backgroundMusic.stop();
+     }
+      
+   // Volver a agregar y reproducir la música
+    this.backgroundMusic = this.sound.add('backmusic', { loop: true, volume: 0.2 });
+   this.backgroundMusic.play();
+    }
+      
+    
   }
 }
