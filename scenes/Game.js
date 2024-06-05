@@ -133,7 +133,7 @@ export default class Game extends Phaser.Scene {
       recolectable.setScale(0.25);
     }
 
-    recolectable.setVelocity(0, 10); // Velocidad con la que caen
+    recolectable.setVelocity(0, 10); // Velocidad con la que caen los objetos
     const nombreFig = recolectable.texture.key;
     recolectable.points = this.shapes[nombreFig].points;
     this.physics.add.collider(recolectable, this.recolectables);
