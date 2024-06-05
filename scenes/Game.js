@@ -16,12 +16,12 @@ export default class Game extends Phaser.Scene {
 
   preload() {
     // Cargar assets
-    this.load.image("cielo", "../public/assets/pizzeria.jpg");
-    this.load.image("plataforma", "../public/assets/platform.png");
-    this.load.image("personaje", "../public/assets/pizza1.webp");
-    this.load.image("triangulo", "../public/assets/rucula.png");
-    this.load.image("diamante", "../public/assets/cebolla.png");
-    this.load.image("cuadrado", "../public/assets/champis.png");
+    this.load.image("cielo", "./public/pizzeria.jpg");
+    this.load.image("plataforma", "./public/platform.png");
+    this.load.image("personaje", "./public/pizza1.webp");
+    this.load.image("triangulo", "./public/rucula.png");
+    this.load.image("diamante", "./public/cebolla.png");
+    this.load.image("cuadrado", "./public/champis.png");
   }
 
   create() {
