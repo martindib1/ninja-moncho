@@ -16,12 +16,12 @@ export default class Game extends Phaser.Scene {
 
   preload() {
     // Cargar assets
-    this.load.image("cielo", "./public/assets/pizzeria.jpg");
-    this.load.image("plataforma", "./public/assets/platform.png");
-    this.load.image("personaje", "./public/assets/pizza1.webp");
-    this.load.image("triangulo", "./public/assets/rucula.png");
-    this.load.image("diamante", "./public/assets/cebolla.png");
-    this.load.image("cuadrado", "./public/assets/champis.png");
+    this.load.image("cielo", "../public/assets/pizzeria.jpg");
+    this.load.image("plataforma", "../public/assets/platform.png");
+    this.load.image("personaje", "../public/assets/pizza1.webp");
+    this.load.image("triangulo", "../public/assets/rucula.png");
+    this.load.image("diamante", "../public/assets/cebolla.png");
+    this.load.image("cuadrado", "../public/assets/champis.png");
   }
 
   create() {
@@ -29,10 +29,10 @@ export default class Game extends Phaser.Scene {
     this.cielo = this.add.image(400, 300, "cielo");
     this.cielo.setScale(2);
 
-    // Crear grupo de platforms
-    this.platforms = this.physics.add.staticGroup();
-    this.platforms.create(400, 568, "plataforma").setScale(2).refreshBody();
-    this.platforms.create(200, 400, "plataforma");
+    // Crear grupo de plataformas
+    this.plataformas = this.physics.add.staticGroup();
+    this.plataformas.create(400, 568, "plataforma").setScale(2).refreshBody();
+    this.plataformas.create(200, 400, "plataforma");
 
     // Crear personaje
     this.personaje = this.physics.add.sprite(400, 300, "personaje");
@@ -40,7 +40,7 @@ export default class Game extends Phaser.Scene {
     this.personaje.setCollideWorldBounds(true);
 
     // Agregar colisión entre personaje y plataforma
-    this.physics.add.collider(this.personaje, this.platforms);
+    this.physics.add.collider(this.personaje, this.plataformas);
 
     // Crear teclas
     this.cursor = this.input.keyboard.createCursorKeys();
@@ -49,9 +49,9 @@ export default class Game extends Phaser.Scene {
     this.recolectables = this.physics.add.group();
     this.physics.add.collider(this.personaje, this.recolectables, this.collectItem, null, this);
 
-    this.physics.add.collider(this.platforms, this.recolectables, this.Bounce, null, this);
+    this.physics.add.collider(this.plataformas, this.recolectables, this.Bounce, null, this);
 
-    this.physics.add.collider(this.platforms, this.recolectables, this.onRecolectableBounced, null, this);
+    this.physics.add.collider(this.plataformas, this.recolectables, this.onRecolectableBounced, null, this);
 
     // Evento cada 1 segundo para crear recolectables
     this.time.addEvent({
@@ -89,7 +89,8 @@ export default class Game extends Phaser.Scene {
     this.shapes[nombreFig].count += 1;
     recolectable.destroy();
 
-    this.scoreText.setText(`puntaje: ${this.score} / T: ${this.shapes["triangulo"].count} / C: ${this.shapes["cuadrado"].count} / D: ${this.shapes["diamante"].count}`
+    this.scoreText.setText(
+      `puntaje: ${this.score} / T: ${this.shapes["triangulo"].count} / C: ${this.shapes["cuadrado"].count} / D: ${this.shapes["diamante"].count}`
     );
 
     this.checkWin();
@@ -111,50 +112,58 @@ export default class Game extends Phaser.Scene {
     }
   }
 
-  /*bounce(platforms, recolectable) {
+  /*bounce(plataformas, recolectable) {
     recolectable.setVelocityY(-150);
     const nombreFig = recolectable.texture.key;
-    recolectable.pointss -= 5;
+    recolectable.points -= 5;
 
-    if (recolectable.pointss <= 0) {
+    if (recolectable.points <= 0) {
       recolectable.destroy();
     }
   } */
 
   onSecond() {
+    if (this.gameOver) {
+      return;
+    }
 
-    //crear reecolectable
-
-    const tipos = ["triangle", "square", "diamond"]
+    const tipos = ["triangulo", "cuadrado", "diamante"];
     const tipo = Phaser.Math.RND.pick(tipos);
 
     let recolectable = this.recolectables.create(
-      Phaser.Math.Between(10, 790),
+      Phaser.Math.Between(15, 785),
       0,
       tipo
     );
 
+    recolectable.setScale(0.25);
+    recolectable.setBounce(1, 1);
+    recolectable.setCollideWorldBounds(true);
+    recolectable.setVelocity(0, 100);
 
-    recolectable.setVelocity(0, 100); 
+    const nombreFig = recolectable.texture.key;
+    recolectable.points = this.shapes[nombreFig].points;
 
-    this.physics.add.collider(recolectable, this.recolectables)
+    this.physics.add.collider(recolectable, this.recolectables);
 
-    //asignar rebote
-        const rebote = Phaser.Math.FloatBetween(0.4, 0.8);
-        recolectable.setBounceY(rebote);
-    //set data
-      recolectable.setData("points",this.shapes[tipo].points);
+  
+    
+    const rebote = Phaser.Math.FloatBetween(0.4, 0.8);
+    
+    recolectable.setBounceY(rebote);
+
+    recolectable.setData("points", this.shapes[tipo].points);
+    
   }
 
-  onRecolectableBounced(platforms, recolectable) {
-    console.log("recolectable rebote",recolectable);
-    let points = recolectable.getData("points");
+  onRecolectableBounced(recolectable, plataforma) {
+    const points = recolectable.getData("points");
     points -= 5;
-    console.log(points)
-    recolectable.setData("points", points);
+
     if (points <= 0) {
       recolectable.destroy();
     }
+    recolectable.setData("points", points)
   }
 
   updateTimer() {
