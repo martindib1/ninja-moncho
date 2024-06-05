@@ -8,22 +8,22 @@ export default class Game extends Phaser.Scene {
     this.timer = 25;
     this.score = 0;
     this.shapes = {
-      "triangulo": { points: 10, count: 0 },
-      "cuadrado": { points: 20, count: 0 },
-      "diamante": { points: 30, count: 0 },
-      "bomb": { points: -10, count: 0 }
+      "tomate": { points: 10, count: 0 },
+      "champi": { points: 20, count: 0 },
+      "cebolla": { points: 30, count: 0 },
+      "anana": { points: -10, count: 0 }
     };
   }
 
   preload() {
     // Cargar assets
     this.load.image("cielo", "./public/pizzeria.jpg");
-    this.load.image("plataforma", "./public/plataforma1.jpg");
-    this.load.image("personaje", "./public/pizaqueso.png");
-    this.load.image("triangulo", "./public/tomate1.png");
-    this.load.image("diamante", "./public/cebolla.png");
-    this.load.image("cuadrado", "./public/champis.png");
-    this.load.image("bomb", "./public/anana.png");
+    this.load.image("plataforma", "./public/plataforma.jpg");
+    this.load.image("personaje", "./public/pizzaqueso.png");
+    this.load.image("tomate", "./public/tomate.png");
+    this.load.image("cebolla", "./public/cebolla.png");
+    this.load.image("champi", "./public/champis.png");
+    this.load.image("anana", "./public/anana.png");
     this.load.audio('backmusic', ['./public/italiana.mp3']);
   }
 
@@ -83,7 +83,7 @@ export default class Game extends Phaser.Scene {
     });
 
     // Mostrar puntaje y tiempo restante
-    this.scoreText = this.add.text(10, 50, `Puntaje: ${this.score} / T: ${this.shapes["triangulo"].count} / C: ${this.shapes["cuadrado"].count} / D: ${this.shapes["diamante"].count}`);
+    this.scoreText = this.add.text(10, 50, `Puntaje: ${this.score} / T: ${this.shapes["tomate"].count} / H: ${this.shapes["champi"].count} / C: ${this.shapes["cebolla"].count} / A: ${this.shapes["anana"].count}`);
     this.timerText = this.add.text(10, 10, `Tiempo restante: ${this.timer}`, {
       fontSize: "32px",
       fill: "#fff",
@@ -95,13 +95,13 @@ export default class Game extends Phaser.Scene {
     this.score += recolectable.getData("points");
     this.shapes[nombreFig].count += 1;
     recolectable.destroy();
-    this.scoreText.setText(`Puntaje: ${this.score} / T: ${this.shapes["triangulo"].count} / C: ${this.shapes["cuadrado"].count} / D: ${this.shapes["diamante"].count}`);
+    this.scoreText.setText(`Puntaje: ${this.score} / T: ${this.shapes["tomate"].count} / H: ${this.shapes["champi"].count} / C: ${this.shapes["cebolla"].count} / A: ${this.shapes["anana"].count}`) ;
     this.checkWin();
   }
 
   checkWin() {
     const cumplePuntos = this.score >= 100;
-    const cumpleFiguras = this.shapes["triangulo"].count >= 2 && this.shapes["cuadrado"].count >= 2 && this.shapes["diamante"].count >= 2;
+    const cumpleFiguras = this.shapes["tomate"].count >= 3 && this.shapes["champi"].count >= 3 && this.shapes["cebolla"].count >= 3;
 
     if (cumplePuntos && cumpleFiguras) {
       console.log("Ganaste");
@@ -115,21 +115,21 @@ export default class Game extends Phaser.Scene {
   onSecond() {
     if (this.gameOver) return;
 
-    const tipos = ["triangulo", "cuadrado", "diamante", "bomb"];
+    const tipos = ["tomate", "champi", "cebolla", "anana"];
     const tipo = Phaser.Math.RND.pick(tipos);
 
     let recolectable = this.recolectables.create(Phaser.Math.Between(15, 785), 0, tipo);
 
-    if (tipo == "bomb") {
+    if (tipo == "anana") {
       recolectable.setScale(0.15);
     }
-    if (tipo == "triangulo") {
+    if (tipo == "tomate") {
       recolectable.setScale(0.03);
     }
-    if (tipo == "cuadrado") {
+    if (tipo == "champi") {
       recolectable.setScale(0.2);
     }
-    if (tipo == "diamante") {
+    if (tipo == "cebolla") {
       recolectable.setScale(0.25);
     }
 
