@@ -1,3 +1,4 @@
+import Menu from "./scenes/Menu.js";
 import Game from "./scenes/Game.js";
 import End from "./scenes/End.js";
 
@@ -28,7 +29,7 @@ const config = {
   // List of scenes to load
   // Only the first scene will be shown
   // Remember to import the scene before adding it to the list
-  scene: [Game, End]
+  scene: [Menu, Game, End]
   };
   
   // Create a new Phaser game instance

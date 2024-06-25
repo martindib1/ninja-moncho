@@ -35,7 +35,7 @@ export default class End extends Phaser.Scene {
         mainScene.backgroundMusic.stop();
       }
       this.scene.stop("end");
-      this.scene.start("main");
+      this.scene.start("menu");
     }
   }
 }

@@ -7,6 +7,7 @@ export default class Game extends Phaser.Scene {
     this.gameOver = false;
     this.timer = 25;
     this.score = 0;
+    this.life = 3;
     this.lastDirection = 'right'; // Nueva propiedad para rastrear la última dirección
     this.shapes = {
       "tomate": { points: 10, count: 0 },
@@ -61,7 +62,7 @@ export default class Game extends Phaser.Scene {
     this.anims.create({
       key: 'left',
       frames: this.anims.generateFrameNumbers('personaje', { start: 0, end: 9 }),
-      frameRate: 10,
+      frameRate: 7,
       repeat: -1
     });
 
@@ -80,7 +81,7 @@ export default class Game extends Phaser.Scene {
     this.anims.create({
       key: 'right',
       frames: this.anims.generateFrameNumbers('personaje', { start: 10, end: 19 }),
-      frameRate: 10,
+      frameRate: 7,
       repeat: -1
     });
 
@@ -94,7 +95,6 @@ export default class Game extends Phaser.Scene {
     this.recolectables = this.physics.add.group();
     this.physics.add.collider(this.recolectables, this.recolectables);
     this.physics.add.collider(this.personaje, this.recolectables, this.collectItem, null, this);
-    this.physics.add.overlap(this.plataformas, this.recolectables, this.Bounce, null, this);
     this.physics.add.collider(this.plataformas, this.recolectables, this.onRecolectableBounced, null, this);
 
     // Evento cada 1 segundo para crear recolectables
@@ -117,28 +117,42 @@ export default class Game extends Phaser.Scene {
     });
 
     // Mostrar puntaje y tiempo restante
-    this.scoreText = this.add.text(10, 50, `Puntaje: ${this.score} / T: ${this.shapes["tomate"].count} / H: ${this.shapes["champi"].count} / C: ${this.shapes["cebolla"].count} / A: ${this.shapes["anana"].count}`);
+    this.scoreText = this.add.text(10, 50, `Puntaje: ${this.score} / T: ${this.shapes["tomate"].count} / H: ${this.shapes["champi"].count} / C: ${this.shapes["cebolla"].count} / A: ${this.shapes["anana"].count}`,{
+      fill: "#000000",
+    });
     this.timerText = this.add.text(10, 10, `Tiempo restante: ${this.timer}`, {
       fontSize: "32px",
-      fill: "#fff",
+      fill: "#000000",
     });
+    this.lifeText = this.add.text(10, 80, `Vidas: ${this.life}`,{
+      fill: "#000000",
+    })
+    
   }
 
   collectItem(personaje, recolectable) {
-    const nombreFig = recolectable.texture.key;
-    this.score += recolectable.getData("points");
-    this.shapes[nombreFig].count += 1;
-    recolectable.destroy();
-    this.scoreText.setText(`Puntaje: ${this.score} / T: ${this.shapes["tomate"].count} / H: ${this.shapes["champi"].count} / C: ${this.shapes["cebolla"].count} / A: ${this.shapes["anana"].count}`);
-    this.checkWin();
+    this.life -= recolectable.life; // Restar vidas
+    recolectable.destroy(); // Destruir el recolectable
+  
+    this.lifeText.setText(`Vidas: ${this.life}`); // Actualizar texto de vidas
+    
+    // Verificar si se acabaron las vidas
+    if (this.life <= 0) {
+      this.gameOver = true;
+      this.scene.start("end", {
+        score: this.score,
+        gameOver: this.gameOver,
+      });
+    }
   }
+
+
 
   checkWin() {
     const cumplePuntos = this.score >= 100;
     const cumpleFiguras = this.shapes["tomate"].count >= 3 && this.shapes["champi"].count >= 3 && this.shapes["cebolla"].count >= 3;
 
     if (cumplePuntos && cumpleFiguras) {
-      console.log("Ganaste");
       this.scene.start("end", {
         score: this.score,
         gameOver: this.gameOver,
@@ -148,26 +162,25 @@ export default class Game extends Phaser.Scene {
 
   onSecond() {
     if (this.gameOver) return;
-
+  
     const tipos = ["tomate", "champi", "cebolla", "anana"];
     const tipo = Phaser.Math.RND.pick(tipos);
-
+  
     let recolectable = this.recolectables.create(Phaser.Math.Between(15, 1150), 0, tipo);
-
-    recolectable.setVelocity(0, 10); // Velocidad con la que caen los objetos
-    const nombreFig = recolectable.texture.key;
-    recolectable.points = this.shapes[nombreFig].points;
+    
+    // Asignar puntos y vidas al recolectable
+    recolectable.points = this.shapes[tipo].points;
+    recolectable.life = 1; // Cantidad de vidas que se restan al recogerlo
+    
     this.physics.add.collider(recolectable, this.recolectables);
     const rebote = Phaser.Math.FloatBetween(0.4, 0.8);
     recolectable.setBounceY(rebote);
     recolectable.setData("points", this.shapes[tipo].points);
   }
-
+  
   onRecolectableBounced(platforms, recolectable) {
-    console.log("Recolectable rebote", recolectable);
     let points = recolectable.getData("points");
     points -= 5;
-    console.log(points);
     recolectable.setData("points", points);
     if (points <= 0) {
       recolectable.destroy();
@@ -190,7 +203,13 @@ export default class Game extends Phaser.Scene {
 
   destruirRecolectable(bala, recolectable) {
     bala.destroy();
+    const nombreFig = recolectable.texture.key;
+    this.score += recolectable.getData("points");
+    this.shapes[nombreFig].count += 1;
     recolectable.destroy();
+    this.scoreText.setText(`Puntaje: ${this.score} / T: ${this.shapes["tomate"].count} / H: ${this.shapes["champi"].count} / C: ${this.shapes["cebolla"].count} / A: ${this.shapes["anana"].count}`);
+    this.checkWin();
+    
   }
 
   destruirBala(bala, plataformas) {
