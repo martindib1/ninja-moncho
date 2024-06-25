@@ -7,6 +7,7 @@ export default class Game extends Phaser.Scene {
     this.gameOver = false;
     this.timer = 25;
     this.score = 0;
+    this.lastDirection = 'right'; // Nueva propiedad para rastrear la última dirección
     this.shapes = {
       "tomate": { points: 10, count: 0 },
       "champi": { points: 20, count: 0 },
@@ -17,17 +18,27 @@ export default class Game extends Phaser.Scene {
 
   preload() {
     // Cargar assets
-    this.load.image("cielo", "./public/pizzeria.jpg");
+    this.load.image("cielo", "./public/tamaño fondo preuba.png");
     this.load.image("plataforma", "./public/plataforma.jpg");
-    this.load.image("personaje", "./public/pizzaqueso.png");
+    this.load.spritesheet("personaje", "./public/pj96x124.png", {
+      frameWidth: 96,
+      frameHeight: 124
+    });
     this.load.image("tomate", "./public/tomate.png");
     this.load.image("cebolla", "./public/cebolla.png");
     this.load.image("champi", "./public/champis.png");
     this.load.image("anana", "./public/anana.png");
+    this.load.image("bala", "./public/bombucha.png");
     this.load.audio('backmusic', ['./public/italiana.mp3']);
   }
 
   create() {
+    // Crear grupo de balas
+    this.balas = this.physics.add.group();
+
+    // Evento para disparar al hacer click
+    this.input.on('pointerdown', this.disparar, this);
+
     // Verificar si la música está sonando
     if (!this.backgroundMusic || !this.backgroundMusic.isPlaying) {
       // Agregar música de fondo
@@ -36,19 +47,43 @@ export default class Game extends Phaser.Scene {
     }
 
     // Crear cielo y ajustarlo
-    this.cielo = this.add.image(400, 300, "cielo");
-    this.cielo.setScale(2);
+    this.cielo = this.add.image(600, 300, "cielo");
 
     // Crear grupo de plataformas
     this.plataformas = this.physics.add.staticGroup();
-    this.plataformas.create(400, 568, "plataforma").setScale(2).refreshBody();
-    this.plataformas.create(50, 400, "plataforma");
-    this.plataformas.create(800, 400, "plataforma");
+    this.plataformas.create(400, 600, "plataforma").setScale(2).refreshBody();
+    this.plataformas.create(1200, 600, "plataforma").setScale(2).refreshBody();
 
-    // Crear personaje
-    this.personaje = this.physics.add.sprite(400, 300, "personaje");
-    this.personaje.setScale(0.2);
+    // Crear personaje con sprite sheet
+    this.personaje = this.physics.add.sprite(400, 300, "personaje").setScale(1);
     this.personaje.setCollideWorldBounds(true);
+
+    // Definir animaciones del personaje
+    this.anims.create({
+      key: 'left',
+      frames: this.anims.generateFrameNumbers('personaje', { start: 0, end: 9 }),
+      frameRate: 10,
+      repeat: -1
+    });
+
+    this.anims.create({
+      key: 'turnLeft',
+      frames: [{ key: 'personaje', frame: 9 }],
+      frameRate: 20
+    });
+
+    this.anims.create({
+      key: 'turnRight',
+      frames: [{ key: 'personaje', frame: 10 }],
+      frameRate: 20
+    });
+
+    this.anims.create({
+      key: 'right',
+      frames: this.anims.generateFrameNumbers('personaje', { start: 10, end: 19 }),
+      frameRate: 10,
+      repeat: -1
+    });
 
     // Agregar colisión entre personaje y plataforma
     this.physics.add.collider(this.personaje, this.plataformas);
@@ -95,7 +130,7 @@ export default class Game extends Phaser.Scene {
     this.score += recolectable.getData("points");
     this.shapes[nombreFig].count += 1;
     recolectable.destroy();
-    this.scoreText.setText(`Puntaje: ${this.score} / T: ${this.shapes["tomate"].count} / H: ${this.shapes["champi"].count} / C: ${this.shapes["cebolla"].count} / A: ${this.shapes["anana"].count}`) ;
+    this.scoreText.setText(`Puntaje: ${this.score} / T: ${this.shapes["tomate"].count} / H: ${this.shapes["champi"].count} / C: ${this.shapes["cebolla"].count} / A: ${this.shapes["anana"].count}`);
     this.checkWin();
   }
 
@@ -118,19 +153,21 @@ export default class Game extends Phaser.Scene {
     const tipos = ["tomate", "champi", "cebolla", "anana"];
     const tipo = Phaser.Math.RND.pick(tipos);
 
-    let recolectable = this.recolectables.create(Phaser.Math.Between(15, 785), 0, tipo);
+    let recolectable = this.recolectables.create(Phaser.Math.Between(15, 1150), 0, tipo);
 
-    if (tipo == "anana") {
-      recolectable.setScale(0.15);
-    }
-    if (tipo == "tomate") {
-      recolectable.setScale(0.03);
-    }
-    if (tipo == "champi") {
-      recolectable.setScale(0.2);
-    }
-    if (tipo == "cebolla") {
-      recolectable.setScale(0.25);
+    switch (tipo) {
+      case "anana":
+        recolectable.setScale(0.15);
+        break;
+      case "tomate":
+        recolectable.setScale(0.03);
+        break;
+      case "champi":
+        recolectable.setScale(0.2);
+        break;
+      case "cebolla":
+        recolectable.setScale(0.25);
+        break;
     }
 
     recolectable.setVelocity(0, 10); // Velocidad con la que caen los objetos
@@ -153,6 +190,29 @@ export default class Game extends Phaser.Scene {
     }
   }
 
+  disparar(pointer) {
+    if (this.gameOver) return;
+
+    // Crear bala en la posición del personaje
+    let bala = this.balas.create(this.personaje.x, this.personaje.y, 'bala');
+    this.physics.add.collider(bala, this.plataformas, this.destruirBala, null, this);
+    this.physics.add.collider(bala, this.recolectables, this.destruirRecolectable, null, this);
+
+    // Calcular dirección de la bala hacia el mouse
+    let angle = Phaser.Math.Angle.Between(this.personaje.x, this.personaje.y, pointer.worldX, pointer.worldY);
+    let velocity = this.physics.velocityFromRotation(angle, 600);
+    bala.setVelocity(velocity.x, velocity.y);
+  }
+
+  destruirRecolectable(bala, recolectable) {
+    bala.destroy();
+    recolectable.destroy();
+  }
+
+  destruirBala(bala, plataformas) {
+    bala.destroy();
+  }
+
   updateTimer() {
     this.timer -= 1;
     this.timerText.setText(`Tiempo restante: ${this.timer}`);
@@ -168,10 +228,19 @@ export default class Game extends Phaser.Scene {
   update() {
     if (this.cursor.left.isDown) {
       this.personaje.setVelocityX(-250);
+      this.personaje.anims.play('left', true);
+      this.lastDirection = 'left';
     } else if (this.cursor.right.isDown) {
       this.personaje.setVelocityX(250);
+      this.personaje.anims.play('right', true);
+      this.lastDirection = 'right';
     } else {
       this.personaje.setVelocityX(0);
+      if (this.lastDirection === 'left') {
+        this.personaje.anims.play('turnLeft');
+      } else {
+        this.personaje.anims.play('turnRight');
+      }
     }
 
     if (this.cursor.up.isDown && this.personaje.body.touching.down) {
