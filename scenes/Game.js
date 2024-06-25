@@ -12,22 +12,22 @@ export default class Game extends Phaser.Scene {
       "tomate": { points: 10, count: 0 },
       "champi": { points: 20, count: 0 },
       "cebolla": { points: 30, count: 0 },
-      "anana": { points: -10, count: 0 }
+      "anana": { points: 10, count: 0 }
     };
   }
 
   preload() {
     // Cargar assets
-    this.load.image("cielo", "./public/tamaño fondo preuba.png");
-    this.load.image("plataforma", "./public/plataforma.jpg");
+    this.load.image("cielo", "./public/fondo.png");
+    this.load.image("plataforma", "./public/piso.png");
     this.load.spritesheet("personaje", "./public/pj96x124.png", {
       frameWidth: 96,
       frameHeight: 124
     });
-    this.load.image("tomate", "./public/tomate.png");
-    this.load.image("cebolla", "./public/cebolla.png");
-    this.load.image("champi", "./public/champis.png");
-    this.load.image("anana", "./public/anana.png");
+    this.load.image("tomate", "./public/slimeprueba.png");
+    this.load.image("cebolla", "./public/slimeprueba2.png");
+    this.load.image("champi", "./public/slimeprueba3.png");
+    this.load.image("anana", "./public/corazon.png");
     this.load.image("bala", "./public/bombucha.png");
     this.load.audio('backmusic', ['./public/italiana.mp3']);
   }
@@ -51,11 +51,10 @@ export default class Game extends Phaser.Scene {
 
     // Crear grupo de plataformas
     this.plataformas = this.physics.add.staticGroup();
-    this.plataformas.create(400, 600, "plataforma").setScale(2).refreshBody();
-    this.plataformas.create(1200, 600, "plataforma").setScale(2).refreshBody();
+    this.plataformas.create(600, 582, "plataforma").refreshBody();
 
     // Crear personaje con sprite sheet
-    this.personaje = this.physics.add.sprite(400, 300, "personaje").setScale(1);
+    this.personaje = this.physics.add.sprite(500, 500, "personaje").setScale(1);
     this.personaje.setCollideWorldBounds(true);
 
     // Definir animaciones del personaje
@@ -155,21 +154,6 @@ export default class Game extends Phaser.Scene {
 
     let recolectable = this.recolectables.create(Phaser.Math.Between(15, 1150), 0, tipo);
 
-    switch (tipo) {
-      case "anana":
-        recolectable.setScale(0.15);
-        break;
-      case "tomate":
-        recolectable.setScale(0.03);
-        break;
-      case "champi":
-        recolectable.setScale(0.2);
-        break;
-      case "cebolla":
-        recolectable.setScale(0.25);
-        break;
-    }
-
     recolectable.setVelocity(0, 10); // Velocidad con la que caen los objetos
     const nombreFig = recolectable.texture.key;
     recolectable.points = this.shapes[nombreFig].points;
@@ -241,10 +225,6 @@ export default class Game extends Phaser.Scene {
       } else {
         this.personaje.anims.play('turnRight');
       }
-    }
-
-    if (this.cursor.up.isDown && this.personaje.body.touching.down) {
-      this.personaje.setVelocityY(-300);
     }
 
     if (this.gameOver && this.r.isDown) {

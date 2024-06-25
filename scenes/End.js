@@ -15,13 +15,13 @@ export default class End extends Phaser.Scene {
     this.r = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
 
     // Mostrar mensaje de Game Over o Victoria
-    this.add.text(400, 300, this.gameOver ? "Game Over" : "You Win", {
+    this.add.text(555, 300, this.gameOver ? "Game Over" : "You Win", {
       fontSize: "40px",
       color: "#ffffff",
     }).setOrigin(0.5);
 
     // Mostrar puntaje
-    this.add.text(400, 350, `Score: ${this.score}`, {
+    this.add.text(555, 350, `Score: ${this.score}`, {
       fontSize: "32px",
       color: "#ffffff",
     }).setOrigin(0.5);
