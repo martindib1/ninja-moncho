@@ -25,6 +25,10 @@ export default class Game extends Phaser.Scene {
       frameWidth: 96,
       frameHeight: 124
     });
+    this.load.spritesheet("splash", "./public/splash-2Sheet46x41.png", {
+      frameWidth: 46,
+      frameHeight: 41
+    });
     this.load.image("tomate", "./public/slimeprueba.png");
     this.load.image("cebolla", "./public/slimeprueba2.png");
     this.load.image("champi", "./public/slimeprueba3.png");
@@ -61,7 +65,7 @@ export default class Game extends Phaser.Scene {
     // Definir animaciones del personaje
     this.anims.create({
       key: 'left',
-      frames: this.anims.generateFrameNumbers('personaje', { start: 0, end: 9 }),
+      frames: this.anims.generateFrameNumbers('personaje', { start: 9, end: 0 }),
       frameRate: 7,
       repeat: -1
     });
@@ -83,6 +87,14 @@ export default class Game extends Phaser.Scene {
       frames: this.anims.generateFrameNumbers('personaje', { start: 10, end: 19 }),
       frameRate: 7,
       repeat: -1
+    });
+
+    //Definir animacion del splash
+
+    this.anims.create({
+      key: 'endsplash',
+      frames: this.anims.generateFrameNumbers('splash', { start: 0, end: 2 }),
+      frameRate: 30,
     });
 
     // Agregar colisión entre personaje y plataforma
@@ -209,8 +221,14 @@ export default class Game extends Phaser.Scene {
     recolectable.destroy();
     this.scoreText.setText(`Puntaje: ${this.score} / T: ${this.shapes["tomate"].count} / H: ${this.shapes["champi"].count} / C: ${this.shapes["cebolla"].count} / A: ${this.shapes["anana"].count}`);
     this.checkWin();
-    
+    this.splash =  this.physics.add.sprite(bala.x, bala.y, "endsplash")
+    this.splash.body.allowGravity = false;
+    this.splash.anims.play("endsplash").on("animationcomplete", ()=>{
+    this.splash.destroy()
+    })
   }
+
+
 
   destruirBala(bala, plataformas) {
     bala.destroy();
